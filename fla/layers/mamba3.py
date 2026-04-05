@@ -84,7 +84,7 @@ class Mamba3(nn.Module):
 
         self.mimo_rank = mimo_rank if is_mimo else 1
         if is_mimo:
-            assert not is_mimo, "MIMO mode requires tilelang; only SISO is supported in FLA for now."
+            raise NotImplementedError("MIMO mode requires tilelang; only SISO is supported in FLA.")
 
         self.d_inner = int(self.expand * self.hidden_size)
         assert self.d_inner % self.head_dim == 0
@@ -141,13 +141,13 @@ class Mamba3(nn.Module):
         # Output projection
         self.out_proj = nn.Linear(self.d_inner, self.hidden_size, bias=use_bias)
 
-    def cuda_kernels_forward(
+    def _prefill_forward(
         self,
         hidden_states: torch.Tensor,
-        last_state: dict | None = None,
         use_cache: bool = False,
+        input_states: tuple | None = None,
     ):
-        """Fast forward path using mamba3_siso_combined Triton kernel."""
+        """Prefill path: process full sequence via mamba3_siso_combined kernel."""
         batch, seqlen, _ = hidden_states.shape
 
         # Input projection and split
@@ -184,7 +184,7 @@ class Mamba3(nn.Module):
         B = self.B_norm(B)
         C = self.C_norm(C)
 
-        # Call SISO kernel
+        # Call SISO kernel with optional input states from cache
         y = mamba3_siso_combined(
             Q=C.squeeze(2),
             K=B.squeeze(2),
@@ -198,19 +198,15 @@ class Mamba3(nn.Module):
             D=self.D,
             Z=z if not self.is_outproj_norm else None,
             chunk_size=self.chunk_size,
-            Input_States=None,
+            Input_States=input_states,
             return_final_states=use_cache,
         )
 
-        ssm_state = None
+        final_states = None
         if use_cache:
             y, last_angle, last_ssm, last_k, last_v, *_ = y
-            ssm_state = {
-                'angle_state': last_angle,
-                'ssm_state': last_ssm,
-                'k_state': last_k,
-                'v_state': last_v,
-            }
+            # Store as tuple for FLA cache compatibility (offload/prefetch)
+            final_states = (last_angle, last_ssm, last_k, last_v)
 
         y = rearrange(y, "b l h p -> b l (h p)")
 
@@ -219,29 +215,7 @@ class Mamba3(nn.Module):
             y = self.norm(y, z_flat)
 
         out = self.out_proj(y.to(hidden_states.dtype))
-        return out, ssm_state
-
-    def torch_forward(
-        self,
-        hidden_states: torch.Tensor,
-        last_state: dict | None = None,
-        use_cache: bool = False,
-    ):
-        """Pure PyTorch reference forward (no CUDA kernels needed).
-
-        Uses the native mamba_ssm Mamba3 module as a reference implementation.
-        This path is slower but works on CPU and for correctness testing.
-        """
-        # For the torch fallback, we delegate to the cuda path since
-        # Mamba3's SISO kernel is Triton-based (not CUDA compiled) and
-        # should work wherever Triton works. If Triton is unavailable,
-        # raise a clear error.
-        if mamba3_siso_combined is None:
-            raise ImportError(
-                "Mamba3 requires `mamba_ssm` with Triton SISO kernels. "
-                "Install via: pip install mamba_ssm (with triton>=3.5.0)"
-            )
-        return self.cuda_kernels_forward(hidden_states, last_state, use_cache)
+        return out, final_states
 
     def forward(
         self,
@@ -252,25 +226,34 @@ class Mamba3(nn.Module):
         output_attentions: bool | None = False,
         **kwargs,
     ) -> tuple[torch.Tensor, torch.Tensor | None, Cache | None]:
+        if mamba3_siso_combined is None:
+            raise ImportError(
+                "Mamba3 requires `mamba_ssm` with Triton SISO kernels. "
+                "Install via: pip install mamba_ssm (with triton>=3.5.0)"
+            )
+
         last_state = get_layer_cache(self, past_key_values)
 
-        # Apply attention mask (zero out padding tokens)
-        if attention_mask is not None and attention_mask.shape[1] > 1 and attention_mask.shape[0] > 1:
+        # Reconstruct input_states tuple from cache if available
+        input_states = None
+        if last_state is not None:
+            rec = last_state.get('recurrent_state')
+            if rec is not None and isinstance(rec, tuple) and len(rec) == 4:
+                input_states = rec
+
+        # Apply attention mask only on prefill (not decode), matching Mamba2 behavior
+        if last_state is None and attention_mask is not None and attention_mask.shape[1] > 1 and attention_mask.shape[0] > 1:
             dtype = hidden_states.dtype
             hidden_states = (hidden_states * attention_mask[:, :, None]).to(dtype)
 
-        if is_fast_path_available and "cuda" in self.in_proj.weight.device.type:
-            output, ssm_state = self.cuda_kernels_forward(hidden_states, last_state, use_cache)
-        else:
-            output, ssm_state = self.torch_forward(hidden_states, last_state, use_cache)
+        output, final_states = self._prefill_forward(hidden_states, use_cache, input_states)
 
-        if ssm_state is not None:
-            update_layer_cache(
-                self,
-                past_key_values,
-                recurrent_state=ssm_state.get('ssm_state'),
-                conv_state=ssm_state,  # store full state dict
-                offset=hidden_states.shape[1],
-            )
+        # Update cache: store states as tuple (compatible with FLA offload/prefetch)
+        update_layer_cache(
+            self,
+            past_key_values,
+            recurrent_state=final_states,
+            offset=hidden_states.shape[1],
+        )
 
         return output, None, past_key_values

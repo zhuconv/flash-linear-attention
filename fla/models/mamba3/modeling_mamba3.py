@@ -86,7 +86,6 @@ class Mamba3PreTrainedModel(PreTrainedModel):
     base_model_prefix = "backbone"
     _no_split_modules = ["Mamba3Block"]
     supports_gradient_checkpointing = True
-    _supports_cache_class = True
 
     def _init_weights(self, module: nn.Module, num_residuals_per_layer: int = 1):
         if isinstance(module, Mamba3):

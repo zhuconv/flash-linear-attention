@@ -56,8 +56,8 @@ class Mamba3Config(PretrainedConfig):
         n_groups: int = 1,
         rope_fraction: float = 0.5,
         chunk_size: int = 64,
-        is_mimo: bool = False,
-        mimo_rank: int = 4,
+        is_mimo: bool = False,   # Not yet supported in FLA (requires tilelang)
+        mimo_rank: int = 4,     # Only used when is_mimo=True
         dt_min: float = 0.001,
         dt_max: float = 0.1,
         dt_init_floor: float = 1e-4,
