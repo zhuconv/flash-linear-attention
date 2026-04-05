@@ -1,0 +1,12 @@
+=== System ===
+i614-071.vista.tacc.utexas.edu
+No /dev/nvidia*
+nvidia-smi not found
+CUDA_HOME=
+Build cuda_12.5.r12.5/compiler.34385749_0
+
+=== Python ===
+torch=2.5.1
+cuda_available=False
+cuda_version=12.4
+device_count=0

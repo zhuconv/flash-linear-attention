@@ -1,0 +1,10 @@
+NVIDIA GH200 120GB
+PyTorch 2.5.1, CUDA: True
+GPU: NVIDIA GH200 120GB
+
+=== Test 1: Shape + Forward/Backward ===
+  Shape test: PASS
+  Forward+backward test: PASS
+
+=== Test 2: Numerical correctness vs native ===
+Relative error FLA vs native: 1.410131

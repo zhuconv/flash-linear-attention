@@ -1,0 +1,17 @@
+NVIDIA GH200 120GB
+PyTorch 2.5.1, CUDA: True
+GPU: NVIDIA GH200 120GB
+
+=== Test 1: Shape + Forward/Backward ===
+  Shape test: PASS
+  Forward+backward test: PASS
+
+=== Test 2: Numerical correctness vs native ===
+Relative error FLA vs native: 0.008139
+  Numerical correctness: PASS
+
+=== Test 3: Speed benchmark ===
+FLA Mamba3 forward: 13.4 ms/iter, 306384 tok/s
+FLA Mamba3 fwd+bwd: 39.8 ms/iter
+
+=== Tests done ===

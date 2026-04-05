@@ -1,0 +1,8 @@
+`use_return_dict` is deprecated! Use `return_dict` instead!
+`use_return_dict` is deprecated! Use `return_dict` instead!
+Traceback (most recent call last):
+  File "<string>", line 6, in <module>
+  File "/work/11012/jiajunzhu2002/flash-linear-attention/tests/test_mamba3.py", line 182, in test_fla_vs_native_logits_close
+    assert rel_error < 0.05, f"Relative error too high: {rel_error}"
+           ^^^^^^^^^^^^^^^^
+AssertionError: Relative error too high: 1.4101312160491943

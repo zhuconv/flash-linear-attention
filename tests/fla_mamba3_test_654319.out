@@ -1,0 +1,4 @@
+GPU: 
+PyTorch 2.5.1, CUDA: False
+
+=== Test 1: Shape + Forward/Backward ===

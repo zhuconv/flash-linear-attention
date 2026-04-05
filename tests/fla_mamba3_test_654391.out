@@ -1,0 +1,58 @@
+NVIDIA GH200 120GB
+PyTorch 2.5.1, CUDA: True
+GPU: NVIDIA GH200 120GB
+
+=== Test 1: Shape + Forward/Backward ===
+  Shape test: PASS
+  Forward+backward test: PASS
+
+=== Test 2: Debug state dict keys ===
+FLA keys (first 20):
+  backbone.embeddings.weight: torch.Size([512, 256])
+  backbone.layers.0.mixer.B_bias: torch.Size([8, 1, 64])
+  backbone.layers.0.mixer.B_norm.weight: torch.Size([64])
+  backbone.layers.0.mixer.C_bias: torch.Size([8, 1, 64])
+  backbone.layers.0.mixer.C_norm.weight: torch.Size([64])
+  backbone.layers.0.mixer.D: torch.Size([8])
+  backbone.layers.0.mixer.dt_bias: torch.Size([8])
+  backbone.layers.0.mixer.in_proj.weight: torch.Size([1192, 256])
+  backbone.layers.0.mixer.out_proj.weight: torch.Size([256, 512])
+  backbone.layers.0.norm.weight: torch.Size([256])
+  backbone.layers.1.mixer.B_bias: torch.Size([8, 1, 64])
+  backbone.layers.1.mixer.B_norm.weight: torch.Size([64])
+  backbone.layers.1.mixer.C_bias: torch.Size([8, 1, 64])
+  backbone.layers.1.mixer.C_norm.weight: torch.Size([64])
+  backbone.layers.1.mixer.D: torch.Size([8])
+  backbone.layers.1.mixer.dt_bias: torch.Size([8])
+  backbone.layers.1.mixer.in_proj.weight: torch.Size([1192, 256])
+  backbone.layers.1.mixer.out_proj.weight: torch.Size([256, 512])
+  backbone.layers.1.norm.weight: torch.Size([256])
+  backbone.norm_f.weight: torch.Size([256])
+Native keys (first 20):
+  backbone.embedding.weight: torch.Size([512, 256])
+  backbone.layers.0.mixer.B_bias: torch.Size([8, 1, 64])
+  backbone.layers.0.mixer.B_norm.weight: torch.Size([64])
+  backbone.layers.0.mixer.C_bias: torch.Size([8, 1, 64])
+  backbone.layers.0.mixer.C_norm.weight: torch.Size([64])
+  backbone.layers.0.mixer.D: torch.Size([8])
+  backbone.layers.0.mixer.dt_bias: torch.Size([8])
+  backbone.layers.0.mixer.in_proj.weight: torch.Size([1192, 256])
+  backbone.layers.0.mixer.out_proj.weight: torch.Size([256, 512])
+  backbone.layers.0.norm.weight: torch.Size([256])
+  backbone.layers.1.mixer.B_bias: torch.Size([8, 1, 64])
+  backbone.layers.1.mixer.B_norm.weight: torch.Size([64])
+  backbone.layers.1.mixer.C_bias: torch.Size([8, 1, 64])
+  backbone.layers.1.mixer.C_norm.weight: torch.Size([64])
+  backbone.layers.1.mixer.D: torch.Size([8])
+  backbone.layers.1.mixer.dt_bias: torch.Size([8])
+  backbone.layers.1.mixer.in_proj.weight: torch.Size([1192, 256])
+  backbone.layers.1.mixer.out_proj.weight: torch.Size([256, 512])
+  backbone.layers.1.norm.weight: torch.Size([256])
+  backbone.norm_f.weight: torch.Size([256])
+FLA total: 21, Native total: 21
+
+=== Test 3: Speed benchmark ===
+FLA Mamba3 forward: 14.2 ms/iter, 287777 tok/s
+FLA Mamba3 fwd+bwd: 42.7 ms/iter
+
+=== Tests done ===
