@@ -80,6 +80,7 @@ This repo provides efficient implementations for emerging model architectures, w
 | 2024 |         | LightNet             | [You Only Scan Once: Efficient Multi-dimension Sequential Modeling with LightNet](https://arxiv.org/abs/2405.21022)                           | [official](https://github.com/OpenNLPLab/LightNet)                                              |       [fla](https://github.com/fla-org/flash-linear-attention/blob/main/fla/layers/lightnet.py)       |
 | 2025 | ICLR    | Samba                | [Samba: Simple Hybrid State Space Models for Efficient Unlimited Context Language Modeling](https://arxiv.org/abs/2406.07522)                 | [official](https://github.com/microsoft/Samba)                                                  |          [fla](https://github.com/fla-org/flash-linear-attention/blob/main/fla/models/samba)          |
 | 2024 | ICML    | Mamba2               | [Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality](https://arxiv.org/abs/2405.21060) | [official](https://github.com/state-spaces/mamba)                                               |         [fla](https://github.com/fla-org/flash-linear-attention/blob/main/fla/models/mamba2)          |
+| 2026 | ICLR    | Mamba3               | Mamba-3: RoPE-Augmented SSM with SISO/MIMO Modes                                                                                              | [official](https://github.com/state-spaces/mamba)                                               |         [fla](https://github.com/fla-org/flash-linear-attention/blob/main/fla/models/mamba3)          |
 | 2024 | NeurIPS | GSA                  | [Gated Slot Attention for Efficient Linear-Time Sequence Modeling](https://arxiv.org/abs/2409.07146)                                          | [official](https://github.com/fla-org/flash-linear-attention/tree/main/fla/models/gsa)          |           [fla](https://github.com/fla-org/flash-linear-attention/tree/main/fla/models/gsa)           |
 | 2025 | ICLR    | Gated DeltaNet       | [Gated Delta Networks: Improving Mamba2 with Delta Rule](https://arxiv.org/abs/2412.06464)                                                    | [official](https://github.com/NVlabs/GatedDeltaNet)                                             |      [fla](https://github.com/fla-org/flash-linear-attention/tree/main/fla/ops/gated_delta_rule)      |
 | 2025 |         | RWKV7                | [RWKV-7 "Goose" with Expressive Dynamic State Evolution](https://arxiv.org/abs/2503.14456)                                                    | [official](https://github.com/BlinkDL/RWKV-LM/tree/main/RWKV-v7)                                |           [fla](https://github.com/fla-org/flash-linear-attention/tree/main/fla/ops/rwkv7)            |
@@ -162,6 +163,17 @@ Here's an example of how to initialize a GLA model from the default configs in `
 >>> from transformers import AutoModelForCausalLM
 >>> config = GLAConfig()
 >>> model = AutoModelForCausalLM.from_config(config)
+```
+
+Similarly, for Mamba-3 (requires `mamba_ssm` with `triton>=3.5.0`):
+
+```py
+>>> from fla.models import Mamba3Config, Mamba3ForCausalLM
+>>> config = Mamba3Config(hidden_size=768, num_hidden_layers=12, state_size=64)
+>>> model = Mamba3ForCausalLM(config).to('cuda', dtype=torch.bfloat16)
+>>> # Fully HF-compatible: supports labels, attention_mask, output_hidden_states, etc.
+>>> output = model(input_ids, labels=labels)
+>>> output.loss.backward()
 ```
 
 <details>
